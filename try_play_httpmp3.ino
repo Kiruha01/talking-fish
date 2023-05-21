@@ -3,8 +3,13 @@
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
 #include "AudioGeneratorMP3.h"
-#include "AudioOutputI2SNoDAC.h"  // #include "AudioOutputI2S.h"
-#define DEBUG_FLAG  
+#define DEBUG_FLAG   
+
+#ifdef USE_I2S
+#include "AudioOutputI2S.h"
+#else
+#include "AudioOutputI2SNoDAC.h"
+#endif
 
 #ifndef STASSID
 #define STASSID "ScoreBoard"
@@ -14,10 +19,14 @@
 AudioGeneratorMP3         *mp3 = NULL;
 AudioFileSourceHTTPStream *file_http = NULL;
 AudioFileSourceBuffer     *buff = NULL;
+#ifdef USE_I2S
+AudioOutputI2S            *out = NULL;
+#else
 AudioOutputI2SNoDAC       *out = NULL;
+#endif
 
 // AudioRelated ---------------------------
-float volume_level              = 0.8;
+float volume_level              = 0.9;
 String playing_status;
 const int preallocateBufferSize = 2048;
 void *preallocateBuffer = NULL;
@@ -59,6 +68,7 @@ void setup() {
 #ifdef USE_I2S
   out = new AudioOutputI2S();
   Serial.println("Using I2S output");
+  out->SetOutputModeMono(true);
 #else
   out = new AudioOutputI2SNoDAC();
   Serial.println("Using No DAC - using Serial port Rx pin");
