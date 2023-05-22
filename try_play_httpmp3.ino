@@ -1,20 +1,25 @@
+// ========= CONFIG =========
+#include "config.h"
+#define DEBUG_FLAG   
+
+#ifndef STASSID
+#define STASSID "ssid"
+#define STAPSK  "password"
+#endif
+
+// ==========================
+
 #include "Arduino.h"
 #include <ESP8266WiFi.h>
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
 #include "AudioGeneratorMP3.h"
-#define DEBUG_FLAG   
-
 #ifdef USE_I2S
 #include "AudioOutputI2S.h"
 #else
 #include "AudioOutputI2SNoDAC.h"
 #endif
 
-#ifndef STASSID
-#define STASSID "ScoreBoard"
-#define STAPSK  "12345678"
-#endif
 
 AudioGeneratorMP3         *mp3 = NULL;
 AudioFileSourceHTTPStream *file_http = NULL;
@@ -25,7 +30,7 @@ AudioOutputI2S            *out = NULL;
 AudioOutputI2SNoDAC       *out = NULL;
 #endif
 
-// AudioRelated ---------------------------
+// ----------- AudioRelated -------------------
 float volume_level              = 0.9;
 String playing_status;
 const int preallocateBufferSize = 2048;
@@ -35,7 +40,7 @@ const char* ssid = STASSID;
 const char* password = STAPSK;
 
 /* ################################## Setup ############################################# */
-const char *URL="http://10.1.31.16:8080/splin.mp3";
+const char *URL="http://192.168.0.101:8080/splin.mp3";
 
 void setup() {
   #ifdef DEBUG_FLAG
