@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timeline Example</title>
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-timeline-graph2d.min.css">
+</head>
+<body onload="onloaded()">
+<div id="app">
+    <input type="file"></input>
+    <div id="timeline"></div>
+    <div>
+        <input type="radio" name="attribute" value="head" id="headradio" checked>
+        <label for="headradio">Head</label>
+        <input type="radio" name="attribute" value="tail" id="tailradio">
+        <label for="tailradio">Tail</label>
+        <input type="radio" name="attribute" value="mouth" id="mradio">
+        <label for="mradio">Mouth</label>
+        <input type="radio" name="attribute" value="none" id="none">
+        <label for="none">None</label>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-timeline-graph2d.min.js"></script>
+<script>
+    var container = document.getElementById('timeline');
+
+    let startDate = new Date("2013-04-14T00:00:00")
+
+    var items = new vis.DataSet([]);
+
+    var groups = [
+        {
+            id: "head",
+            content: 'Head'
+        },
+        {
+            id: "tail",
+            content: "Tail"
+        },
+        {
+            id: "mouth",
+            content: "Mouth"
+        }
+    ];
+
+    // Configuration for the Timeline
+    var options = {editable: true, timeAxis: {scale: 'second', step: 1},
+        format: {
+            minorLabels: {
+                second:     '',
+            },
+            majorLabels:{
+                millisecond:'',
+                second:     'mm:ss',
+                minute:     '',
+                hour:       '',
+                weekday:    '',
+                day:        '',
+                week:       '',
+                month:      '',
+                year:       ''
+
+            }
+
+        },
+        start: "2013-04-14T00:00:00",
+        min:  "2013-04-14T00:00:00",
+        end: "2013-04-14T00:03:15",
+        max: "2013-04-14T00:03:15",
+        snap: (date, scale, step) => {return Math.round(date/10)*10} // 100 milliseconds
+    };
+
+    // Create a Timeline
+    var timeline = new vis.Timeline(container, items, groups, options);
+    var played = false;
+    var timerId = undefined;
+    var new_id = 1;
+    var timr_start = undefined;
+
+    function onloaded(){
+        timeline.addCustomTime("2013-04-14T00:00:00", 0)
+    }
+
+
+    function print(){
+    console.log(document.querySelector('input[name="attribute"]:checked').value)
+    console.log(items)
+    }
+
+    function add(){
+        items.add({id: new_id, content: 'item ' + new_id.toString(), start: "2013-04-14T00:00:01", end: "2013-04-14T00:00:04", group: 1})
+        timeline.setItems(items)
+    }
+    var audio = undefined;
+
+    function play_stop(){
+        if (played === false){
+            // var current_items = items.get({filter: (item) => item.group !== document.querySelector('input[name="attribute"]:checked').value})
+            audio = new Audio("http://file-service.local/files/Free_Test_Data_1MB_MP3.mp3");
+            audio.play();
+            timerId = setInterval(() => {
+                var t = timeline.getCustomTime(0)
+                t.setMilliseconds(t.getMilliseconds() + 10)
+                timeline.setCustomTime(t, 0);
+
+                let overed_items = items.get({filter:(item) => item.start <= t && item.end > t});
+                console.log(overed_items.length)
+                show_picture_on_items(overed_items)
+            }, 10);
+            played = true;
+        }
+        else{
+            clearInterval(timerId);
+            played = false;
+            audio.pause();
+            audio = undefined;
+            timeline.setCustomTime("2013-04-14T00:00:00", 0)
+            timeline.setItems(items);
+
+        }
+    }
+
+    window.addEventListener("keydown", (e) => {
+        if (!e.repeat && e.key === "v") {
+            console.log(`Key "${e.key}" pressed [event: keydown]`);
+            timr_start = timeline.getCustomTime(0);
+            console.log(timr_start)
+        }
+    });
+
+    window.addEventListener("keyup", (e) => {
+        if (e.key === "v") {
+            console.log(`Key "${e.key}" released [event: keydown] "${timeline.getCustomTime(0)}"`);
+            if (played && timr_start.getMilliseconds() !== timeline.getCustomTime(0).getMilliseconds() &&
+                document.querySelector('input[name="attribute"]:checked').value !== "none"
+            ){
+                items.add({
+                    id: new_id,
+                    content: 'item ' + new_id.toString(),
+                    start: timr_start,
+                    end: timeline.getCustomTime(0),
+                    group: document.querySelector('input[name="attribute"]:checked').value
+                });
+                new_id += 1;
+
+            }
+        }
+    });
+
+function show_picture_on_items(items){
+    var head = false;
+    var tail = false;
+    var mouth = false;
+
+    items.forEach((item) => {
+        if (item.group === "head"){
+            head = true;
+        }
+        if (item.group === "tail"){
+            tail = true;
+        }
+        if (item.group === "mouth"){
+            mouth = true;
+        }
+    })
+
+    let nonePic = document.getElementById("nones");
+    let headPic = document.getElementById("head");
+    let tailPic = document.getElementById("tail");
+    let mouthPic = document.getElementById("mouth");
+    let headmouthPic = document.getElementById("headmouth");
+    let tailMouthPic = document.getElementById("tailmouth");
+
+
+
+    if (head && !tail && !mouth){
+        headPic.style.display = "block";
+
+        tailPic.style.display = "none";
+        mouthPic.style.display = "none";
+        headmouthPic.style.display = "none";
+        tailMouthPic.style.display = "none";
+        nonePic.style.display = "none";
+    }
+    else if (head && mouth){
+        headmouthPic.style.display = "block";
+
+        tailPic.style.display = "none";
+        mouthPic.style.display = "none";
+        tailMouthPic.style.display = "none";
+        headPic.style.display = "none";
+        nonePic.style.display = "none";
+
+
+    }
+    else if (tail && mouth){
+        tailMouthPic.style.display = "block";
+
+        tailPic.style.display = "none";
+        mouthPic.style.display = "none";
+        headPic.style.display = "none";
+        headmouthPic.style.display = "none";
+        nonePic.style.display = "none";
+
+
+    }
+    else if (mouth && !head && !tail){
+        mouthPic.style.display = "block";
+
+        tailPic.style.display = "none";
+        headPic.style.display = "none";
+        headmouthPic.style.display = "none";
+        tailMouthPic.style.display = "none";
+        nonePic.style.display = "none";
+
+    }
+    else if (!mouth && !head && tail){
+        tailPic.style.display = "block";
+
+        headPic.style.display = "none";
+        headmouthPic.style.display = "none";
+        tailMouthPic.style.display = "none";
+        mouthPic.style.display = "none";
+        nonePic.style.display = "none";
+
+
+    }
+    else{
+        nonePic.style.display = "block";
+
+
+        headPic.style.display = "none";
+        headmouthPic.style.display = "none";
+        tailMouthPic.style.display = "none";
+        mouthPic.style.display = "none";
+        tailPic.style.display = "none";
+
+    }
+}
+
+function clearing(){
+    let groupName = document.querySelector('input[name="attribute"]:checked').value;
+    console.log(groupName);
+    items.remove(items.getIds({filter: function (item) { return item.group === groupName}}))
+}
+
+
+function jsoning(){
+    var final_json = {
+        m: [],
+        h: [],
+        t: []
+    }
+    let headItems = items.get({filter: function (i){ return i.group === "head"}}).sort((a, b) => {
+        return a.start - b.start
+    });
+    headItems.forEach((itm) => {
+        final_json.h.push(itm.start.getTime() - startDate.getTime())
+        final_json.h.push(itm.end.getTime() - startDate.getTime())
+    })
+
+    let tailItems = items.get({filter: function (i){ return i.group === "tail"}}).sort((a, b) => {
+        return a.start - b.start
+    });
+    tailItems.forEach((itm) => {
+        final_json.t.push(itm.start.getTime() - startDate.getTime())
+        final_json.t.push(itm.end.getTime() - startDate.getTime())
+    })
+
+    let mouthItems = items.get({filter: function (i){ return i.group === "mouth"}}).sort((a, b) => {
+        return a.start - b.start
+    });
+    mouthItems.forEach((itm) => {
+        final_json.m.push(itm.start.getTime() - startDate.getTime())
+        final_json.m.push(itm.end.getTime() - startDate.getTime())
+    })
+
+    console.log(final_json)
+
+}
+
+</script>
+<button onclick="print()">Buo</button>
+<button onclick="play_stop()">play/stop</button>
+<button onclick="add()">add</button>
+<button onclick="clearing()">Clear selected group</button>
+<button onclick="jsoning()">Convert to JSON</button>
+
+
+<div>
+    <img src="" alt="NONE" style="display: block" id="nones">
+    <img src="" alt="HEAD" style="display: none" id="head">
+    <img src="" alt="TAIL" style="display: none" id="tail">
+    <img src="" alt="MOUTH" style="display: none" id="mouth">
+    <img src="" alt="HEAD and MOUTH" style="display: none" id="headmouth">
+    <img src="" alt="TAIL and MOUTH" style="display: none" id="tailmouth">
+</div>
+</body>
+</html>
