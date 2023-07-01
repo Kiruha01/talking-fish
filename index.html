@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Timeline Example</title>
+    <title>Fish Configure</title>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/vis/4.21.0/vis-timeline-graph2d.min.css">
 </head>
 <body onload="onloaded()">
+<div>
+    <input type="text" name="soundUrl" id="sndUrl">
+    <button onclick="load_sound()">Choose</button>
+</div>
 <div id="app">
-    <input type="file"></input>
     <div id="timeline"></div>
     <div>
         <input type="radio" name="attribute" value="head" id="headradio" checked>
@@ -64,10 +67,10 @@
             }
 
         },
-        start: "2013-04-14T00:00:00",
-        min:  "2013-04-14T00:00:00",
-        end: "2013-04-14T00:03:15",
-        max: "2013-04-14T00:03:15",
+        start: startDate,
+        min:  startDate,
+        end: Date.parse("2013-04-14T00:00:01"),
+        max: Date.parse("2013-04-14T00:00:01"),
         snap: (date, scale, step) => {return Math.round(date/10)*10} // 100 milliseconds
     };
 
@@ -78,9 +81,28 @@
     var new_id = 1;
     var timr_start = undefined;
 
+    var audio = undefined;
+
+
     function onloaded(){
         timeline.addCustomTime("2013-04-14T00:00:00", 0)
     }
+
+    function load_sound(){
+        let url = document.getElementById("sndUrl").value
+        console.log(url);
+        audio = new Audio(url);
+        audio.onloadedmetadata = function () {
+            console.log(audio.duration);
+            let s = new Date(startDate.getTime())
+            s.setSeconds(audio.duration)
+            console.log(s)
+            options.max = s
+            options.end = s
+            timeline.setOptions(options)
+        }
+    }
+
 
 
     function print(){
@@ -92,12 +114,9 @@
         items.add({id: new_id, content: 'item ' + new_id.toString(), start: "2013-04-14T00:00:01", end: "2013-04-14T00:00:04", group: 1})
         timeline.setItems(items)
     }
-    var audio = undefined;
 
     function play_stop(){
         if (played === false){
-            // var current_items = items.get({filter: (item) => item.group !== document.querySelector('input[name="attribute"]:checked').value})
-            audio = new Audio("http://file-service.local/files/Free_Test_Data_1MB_MP3.mp3");
             audio.play();
             timerId = setInterval(() => {
                 var t = timeline.getCustomTime(0)
@@ -114,7 +133,7 @@
             clearInterval(timerId);
             played = false;
             audio.pause();
-            audio = undefined;
+            audio.currentTime = 0;
             timeline.setCustomTime("2013-04-14T00:00:00", 0)
             timeline.setItems(items);
 
@@ -277,6 +296,11 @@ function jsoning(){
     })
 
     console.log(final_json)
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(final_json));
+    let dlAnchorElem = document.getElementById('downloadAnchorElem');
+    dlAnchorElem.setAttribute("href",     dataStr     );
+    dlAnchorElem.setAttribute("download", "data.json");
+    dlAnchorElem.click();
 
 }
 
@@ -296,5 +320,6 @@ function jsoning(){
     <img src="" alt="HEAD and MOUTH" style="display: none" id="headmouth">
     <img src="" alt="TAIL and MOUTH" style="display: none" id="tailmouth">
 </div>
+<a id="downloadAnchorElem" style="display:none"></a>
 </body>
 </html>
