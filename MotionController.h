@@ -1,6 +1,6 @@
 #include <ArduinoJson.h>
 
-#define BUFFER_LEN 1000
+#define BUFFER_LEN 3000
 
 
 class MotionController{
@@ -23,6 +23,8 @@ class MotionController{
     bool mouthState = false;
 
     unsigned long startTime;
+    bool started = false;
+    bool wait_motion = true;
 
     void toogleHead(){
       #ifdef DEBUG_FLAG
@@ -89,19 +91,28 @@ class MotionController{
           }
         }
        Serial.println();
+       wait_motion = false;
 
     }
 
     void start(){
-      startTime = millis();
       currentHeadIndex = 0;
       currentTailIndex = 0;
       currentMouthIndex = 0;
+      started = false;
     }
 
     void loopTick(){
+      if (wait_motion) return;
+      
+      if (!started){
+        startTime = millis();
+        started = true;
+        return;
+      }
 
       unsigned long delayTime = millis() - startTime;
+      Serial.println(delayTime);
       if (delayTime >= head[currentHeadIndex] and currentHeadIndex < headLen){
         toogleHead();
           ++currentHeadIndex;
@@ -113,6 +124,11 @@ class MotionController{
       if (delayTime >= mouth[currentMouthIndex] and currentMouthIndex < mouthLen){
         toogleMouth();
         ++currentMouthIndex;
+      }
+
+      if (currentMouthIndex >= mouthLen and currentTailIndex >= tailLen and currentHeadIndex >= headLen){
+        started = false;
+        wait_motion = true;
       }
 
     }

@@ -30,7 +30,7 @@ MusicPlayer player;
 MotionController motion;
 
 /* ################################## Setup ############################################# */
-String URL = "http://192.168.0.101:8080/data";
+String URL = "http://192.168.0.105/files/fish-sing";
 
 void setup() {
   pinMode(HEAD_PIN, OUTPUT);
@@ -61,10 +61,10 @@ void setup() {
 #ifdef DEBUG_FLAG
   Serial.println("Connected");
 #endif
-
+  player.play(URL + ".mp3");
   motion.setMotion(getJsonData(URL + ".json"));
   motion.start();
-  player.play(URL + ".mp3");
+
 
 }
 

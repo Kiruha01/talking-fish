@@ -1,6 +1,7 @@
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
 #include "AudioGeneratorMP3.h"
+#define USE_I2S
 #ifdef USE_I2S
 #include "AudioOutputI2S.h"
 #else
@@ -21,7 +22,7 @@ class MusicPlayer{
     #else
     AudioOutputI2SNoDAC       *out = NULL;
     #endif
-    const int preallocateBufferSize = 2048;
+    const int preallocateBufferSize = 4096;
     void *preallocateBuffer = NULL;
 
   public:
@@ -39,6 +40,7 @@ class MusicPlayer{
   
     void play(String url){
       file_http = new AudioFileSourceHTTPStream();
+      Serial.println(url);
       
       if ( file_http->open(url.c_str())) {
         buff = new AudioFileSourceBuffer(file_http, preallocateBuffer, preallocateBufferSize);
