@@ -1,14 +1,15 @@
+#pragma once
+
 #include "AudioFileSourceHTTPStream.h"
 #include "AudioFileSourceBuffer.h"
 #include "AudioGeneratorMP3.h"
-#define USE_I2S
+
 #ifdef USE_I2S
 #include "AudioOutputI2S.h"
 #else
 #include "AudioOutputI2SNoDAC.h"
 #endif
 
-#define volume_level 0.9
 
 
 class MusicPlayer{
@@ -31,5 +32,17 @@ class MusicPlayer{
     void play(String url);
     void loopTick();
     void stopPlaying();
+
+    ~MusicPlayer() {
+      stopPlaying();
+      if (out) {
+          delete out;
+          out = nullptr;
+      }
+      if (preallocateBuffer) {
+          free(preallocateBuffer);
+          preallocateBuffer = nullptr;
+      }
+  }
 
 };

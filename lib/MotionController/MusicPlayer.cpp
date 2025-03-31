@@ -1,4 +1,12 @@
-#include "player.h"
+#include "MusicPlayer.h"
+
+#define HEAD_PIN D2
+#define TAIL_PIN D6
+#define MOUTH_PIN D5
+
+#define USE_I2S
+#define volume_level 0.9
+
 
 MusicPlayer::MusicPlayer() {
     #ifdef USE_I2S
@@ -61,16 +69,16 @@ void MusicPlayer::stopPlaying(){
         #endif
         mp3->stop();
         delete mp3;
-        mp3 = NULL;
+        mp3 = nullptr;
       }
       if (buff) {
         buff->close();
         delete buff;
-        buff = NULL;
+        buff = nullptr;
       }
       if (file_http) {
         file_http->close();
         delete file_http;
-        file_http = NULL;
+        file_http = nullptr;
       }
 }

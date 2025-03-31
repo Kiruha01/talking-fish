@@ -4,7 +4,6 @@
 #include <ESP8266HTTPClient.h>
 
 // ========= CONFIG =========
-#include "config.h"
 #define DEBUG_FLAG
 
 #ifndef STASSID
@@ -12,13 +11,6 @@
 #define STAPSK  "PASS"
 #endif
 
-#ifndef HEAD_PIN
-#define HEAD_PIN D2
-#define TAIL_PIN D6
-#define MOUTH_PIN D5
-#endif
-
-#include "player.h"
 #include "MotionController.h"
 
 // ==========================
@@ -26,50 +18,14 @@
 const char* ssid = STASSID;
 const char* password = STAPSK;
 
-MusicPlayer player;
-MotionController motion = MotionController(HEAD_PIN, TAIL_PIN, MOUTH_PIN);
+MotionController motion;
 
 /* ################################## Setup ############################################# */
 String URL = "http://192.168.0.105/files/fish-sing";
 
 
-String getJsonData(String url) {
-  WiFiClient client;
-
-  HTTPClient http;
-  if (http.begin(client, url)) {
-    int httpCode = http.GET();
-    if (httpCode > 0) {
-#ifdef DEBUG_FLAG
-      Serial.printf("[HTTP] GET... code: %d\n", httpCode);
-#endif
-
-
-      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-        String payload = http.getString();
-#ifdef DEBUG_FLAG
-        Serial.println(payload);
-#endif
-        http.end();
-        return payload;
-      }
-    } else {
-      Serial.println(url);
-      Serial.printf("[HTTP] GET... failed, error: %s\n", http.errorToString(httpCode).c_str());
-    }
-
-    http.end();
-  } else {
-    Serial.printf("[HTTP} Unable to connect\n");
-  }
-  return "";
-
-}
-
 void setup() {
-  pinMode(HEAD_PIN, OUTPUT);
-  pinMode(TAIL_PIN, OUTPUT);
-  pinMode(MOUTH_PIN, OUTPUT);
+  motion.setUp();
   Serial.begin(115200);
   delay(1000);
 #ifdef DEBUG_FLAG
@@ -93,18 +49,50 @@ void setup() {
 #ifdef DEBUG_FLAG
   Serial.println("Connected");
 #endif
-  player.play(URL + ".mp3");
-  motion.setMotion(getJsonData(URL + ".json"));
-  motion.start();
 
-
+  motion.specFinder.setBaseUrl("http://192.168.0.105/files");
+  motion.setUpSpec("fish-sing");
 }
 
 /* #################################### Loop ############################################## */
 
 void loop() {
-  player.loopTick();
-  motion.loopTick();
+  motion.tick();
 }
 
 /* ################################## Network ############################################# */
+
+// #include "Arduino.h"
+// #include <ArduinoJson.h>
+
+
+// const String jsonString = "{\"one\": [1,2,3,222,456754323,1231232323232323232, \"sadfad\"]}";
+
+// void setup(){
+//   Serial.begin(115200);
+// }
+
+// void loop(){
+//   JsonDocument* jsonDoc = new JsonDocument(); // TODO: on json size
+//   DeserializationError err = deserializeJson(*jsonDoc, jsonString);
+//   if (err != DeserializationError::Ok){
+//     Serial.println("Error");
+//     Serial.println(err.f_str());
+//   }
+//   if ((*jsonDoc)["one"].is<JsonArray>()) {
+//     Serial.println("is json array");
+//       JsonArray s = (*jsonDoc)["one"];
+//       int headLen = s.size();
+//       Serial.println(headLen);
+//       for (int i = 0; i<headLen; ++i){
+//         Serial.print(s[i].as<String>());
+//         Serial.print(" (");
+//         Serial.print(s[i].as<long long>());
+//         Serial.print(") ");
+//         Serial.print(s[i].is<int>());
+//         Serial.print(" ");
+//       }
+//     }
+//   delete jsonDoc;
+//   delay(200);
+// }

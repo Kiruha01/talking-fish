@@ -1,41 +1,40 @@
-#include <ArduinoJson.h>
+#include "MotionPlayer.h"
+#include "MusicPlayer.h"
+#include "HttpSpecFinder.h"
 
-#define BUFFER_LEN 3000
+class MotionController
+{
+private:
+    MotionPlayer motionPlayer;
+    MusicPlayer musicPlayer;
+public:
+    void setUp() {
+        pinMode(HEAD_PIN, OUTPUT);
+        pinMode(TAIL_PIN, OUTPUT);
+        pinMode(MOUTH_PIN, OUTPUT);
+    }
 
+    HttpSpecFinder specFinder;
+    void tick() {
+        musicPlayer.loopTick();
+        motionPlayer.loopTick();
+    }
 
-class MotionController{
-  private:
-    JsonDocument* jsonDoc;
+    void setUpSpec(String name) {
+        if (specFinder.checkStatusCode(name + ".mp3") != 200) return;
     
-    byte headPin;
-    byte tailPin;
-    byte mouthPin;
-    
-    int head[100];
-    int currentHeadIndex = 0;
-    int headLen = 0;
-    bool headState = false;
-    
-    int tail[100];
-    int tailLen = 0;
-    int currentTailIndex = 0;
-    bool tailState = false;
-    
-    int mouth[500];
-    int mouthLen = 0;
-    int currentMouthIndex = 0;
-    bool mouthState = false;
+        MotionSpec* newSpec = specFinder.fetchSpec(name);
+        if (newSpec == nullptr) return;
 
-    unsigned long startTime;
-    bool started = false;
-    bool wait_motion = true;
-
-    void toogleHead();
-    void toogleTail();
-    void toogleMouth();
-  public:
-    MotionController(byte hPin, byte tPin, byte mPin) : headPin(hPin), tailPin(tPin), mouthPin(mPin) {};
-    void setMotion(String cc);
-    void start();
-    void loopTick();
+        #ifdef DEBUG_FLAG
+        Serial.print("head spec size: ");
+        for (size_t i = 0; i < newSpec->headSize; ++i){
+            Serial.printf("%d ", newSpec->head[i]);
+        }
+        #endif
+        Serial.println();
+        musicPlayer.play(specFinder.makeMp3Link(name));
+        motionPlayer.setMotion(newSpec);
+        motionPlayer.start();
+    }
 };
