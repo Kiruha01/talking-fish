@@ -1,3 +1,4 @@
+#pragma once
 #include "MotionPlayer.h"
 #include "MusicPlayer.h"
 #include "HttpSpecFinder.h"
@@ -21,7 +22,10 @@ public:
     }
 
     void setUpSpec(String name) {
-        if (specFinder.checkStatusCode(name + ".mp3") != 200) return;
+        if (specFinder.checkStatusCode(name + ".mp3") != 200){
+            Serial.println("not found");
+            return;
+        }
     
         MotionSpec* newSpec = specFinder.fetchSpec(name);
         if (newSpec == nullptr) return;
@@ -29,7 +33,7 @@ public:
         #ifdef DEBUG_FLAG
         Serial.print("head spec size: ");
         for (size_t i = 0; i < newSpec->headSize; ++i){
-            Serial.printf("%d ", newSpec->head[i]);
+            Serial.printf("%ld ", newSpec->head[i]);
         }
         #endif
         Serial.println();

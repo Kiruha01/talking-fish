@@ -86,7 +86,7 @@ public:
 
         WiFiClient client;
         HTTPClient http;
-
+        Serial.println(baseUrl + "/" + filename);
         if (!http.begin(client, baseUrl + "/" + filename)) return 0;
         int status = http.sendRequest("HEAD");
         http.end();
